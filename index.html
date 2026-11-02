@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kho Acc Game Uy Tín</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #0f1015;
+      --card-bg: #181920;
+      --accent-color: #ffb800;
+      --accent-hover: #e0a200;
+      --text-main: #ffffff;
+      --text-sub: #a0a5b5;
+      --border-color: #2a2b36;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 50px; }
+
+    /* Header */
+    header { background: linear-gradient(180deg, #1f212d 0%, var(--bg-color) 100%); padding: 30px 20px 20px; text-align: center; border-bottom: 1px solid var(--border-color); }
+    header h1 { font-size: 26px; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    header p { color: var(--text-sub); font-size: 15px; }
+    header p strong { color: #fff; }
+
+    /* Container & Toolbar */
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px 15px; }
+    .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; background: var(--card-bg); padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+    .search-box { position: relative; flex: 1; min-width: 200px; }
+    .search-box input { width: 100%; padding: 10px 15px 10px 40px; background: #0f1015; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; outline: none; }
+    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
+    .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { background: #0f1015; border: 1px solid var(--border-color); color: var(--text-sub); padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .tag.active, .tag:hover { background: var(--accent-color); color: #000; font-weight: bold; border-color: var(--accent-color); }
+
+    /* Grid Layout */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+
+    /* Account Card */
+    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; position: relative; display: flex; flex-direction: column; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #3f4257; }
+    
+    .card-thumb { position: relative; width: 100%; height: 160px; background: #000; overflow: hidden; }
+    .card-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .card:hover .card-thumb img { transform: scale(1.05); }
+    
+    .badge-status { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    .badge-available { background: rgba(46, 213, 115, 0.9); color: #000; }
+    .badge-sold { background: rgba(255, 71, 87, 0.9); color: #fff; }
+
+    .badge-id { position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.75); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+
+    .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+    .card-notes { font-size: 13px; color: var(--accent-color); min-height: 18px; margin-bottom: 8px; }
+
+    .price-box { margin-bottom: 12px; }
+    .current-price { font-size: 18px; font-weight: bold; color: var(--accent-color); }
+    .old-price { font-size: 13px; color: var(--text-sub); text-decoration: line-through; margin-left: 6px; }
+
+    .buy-btn { display: flex; justify-content: center; align-items: center; gap: 8px; background: var(--accent-color); color: #000; text-align: center; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+    .buy-btn:hover { background: var(--accent-hover); }
+    .buy-btn.disabled { background: #2a2b36; color: #666; cursor: not-allowed; pointer-events: none; }
+
+    .card.sold-out { opacity: 0.55; }
+    .card.sold-out .card-thumb img { filter: grayscale(100%); }
+    .status-msg { text-align: center; grid-column: 1 / -1; padding: 50px 0; color: var(--text-sub); font-size: 15px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 id="shop-title">SHOP ACC GAME</h1>
+    <p><i class="fa-brands fa-whatsapp"></i> Hotline / Zalo hỗ trợ: <strong id="ctv-phone">...</strong></p>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="search-input" placeholder="Tìm theo mã acc (ví dụ: DTT507)..." onkeyup="filterAccounts()">
+      </div>
+      <div class="filter-tags">
+        <button class="tag active" onclick="setFilter('all', this)">Tất cả</button>
+        <button class="tag" onclick="setFilter('available', this)">Còn hàng</button>
+        <button class="tag" onclick="setFilter('under-2m', this)">Dưới 2 Triệu</button>
+        <button class="tag" onclick="setFilter('2m-5m', this)">2M - 5M</button>
+        <button class="tag" onclick="setFilter('over-5m', this)">Trên 5 Triệu</button>
+      </div>
+    </div>
+
+    <div id="account-list" class="grid">
+      <div class="status-msg"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu từ máy chủ kho game...</div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    let rawAccounts = [];
+    let currentFilter = 'all';
+
+    // Đọc thông số từ file config.js
+    const ctvName = (typeof CONFIG !== 'undefined' && CONFIG.CTV_NAME) ? CONFIG.CTV_NAME : "CỘNG TÁC VIÊN";
+    const ctvPhone = (typeof CONFIG !== 'undefined' && CONFIG.CTV_PHONE) ? CONFIG.CTV_PHONE : "083xxxxxxx";
+    const zaloLink = (typeof CONFIG !== 'undefined' && CONFIG.ZALO_LINK) ? CONFIG.ZALO_LINK : "https://zalo.me/";
+    const extraPrice = (typeof CONFIG !== 'undefined' && CONFIG.EXTRA_PRICE) ? CONFIG.EXTRA_PRICE : 0;
+
+    document.getElementById('ctv-phone').innerText = ctvPhone;
+    document.getElementById('shop-title').innerText = `KHO ACC GAME - ${ctvName.toUpperCase()}`;
+
+    // Chuẩn hóa đường dẫn ảnh (phòng hờ ảnh trả về dạng tương đối /api/vps/...)
+    function formatImageUrl(url) {
+      if (!url) return 'https://via.placeholder.com/300x160?text=No+Image';
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `https://www.tienrv.com${url}`;
+    }
+
+    async function loadAccounts() {
+      try {
+        const response = await fetch(CONFIG.API_URL);
+        const result = await response.json();
+        
+        // Hỗ trợ cả 2 định dạng trả về phổ biến: { accounts: [...] } hoặc { data: [...] } hoặc mảng trực tiếp
+        rawAccounts = result.accounts || result.data || (Array.isArray(result) ? result : []);
+        
+        renderAccounts();
+      } catch (error) {
+        console.error('Lỗi gọi API:', error);
+        document.getElementById('account-list').innerHTML = '<div class="status-msg" style="color: #ff4757;">Không thể kết nối tới máy chủ API hoặc bị chặn CORS. Vui lòng kiểm tra lại.</div>';
+      }
+    }
+
+    function renderAccounts() {
+      const container = document.getElementById('account-list');
+      const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+      container.innerHTML = '';
+
+      const filtered = rawAccounts.filter(acc => {
+        const accId = String(acc.id || '').toLowerCase();
+        const accTitle = String(acc.title || '').toLowerCase();
+        const matchSearch = accId.includes(searchQuery) || accTitle.includes(searchQuery);
+        
+        const adjustedPrice = (acc.price || 0) + extraPrice;
+        
+        let matchFilter = true;
+        if (currentFilter === 'available') matchFilter = acc.status === 'Còn hàng';
+        else if (currentFilter === 'under-2m') matchFilter = adjustedPrice < 2000000;
+        else if (currentFilter === '2m-5m') matchFilter = adjustedPrice >= 2000000 && adjustedPrice <= 5000000;
+        else if (currentFilter === 'over-5m') matchFilter = adjustedPrice > 5000000;
+
+        return matchSearch && matchFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="status-msg">Không tìm thấy tài khoản phù hợp.</div>';
+        return;
+      }
+
+      filtered.forEach(acc => {
+        const isAvailable = acc.status === 'Còn hàng';
+        const finalPrice = (acc.price || 0) + extraPrice;
+        const finalOldPrice = acc.old_price ? acc.old_price + extraPrice : null;
+        const imgUrl = formatImageUrl(acc.image);
+        const displayCode = acc.title || acc.id;
+        const buyUrl = `${zaloLink}?text=Mình%20muốn%20mua%20mã%20acc%20%23${displayCode}`;
+
+        const card = document.createElement('div');
+        card.className = `card ${!isAvailable ? 'sold-out' : ''}`;
+
+        card.innerHTML = `
+          <div class="card-thumb">
+            <span class="badge-id">#${displayCode}</span>
+            <span class="badge-status ${isAvailable ? 'badge-available' : 'badge-sold'}">${acc.status}</span>
+            <img src="${imgUrl}" alt="${displayCode}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x160?text=Loi+Anh'">
+          </div>
+          <div class="card-body">
+            <div>
+              <div class="card-title">Mã Acc: ${displayCode}</div>
+              <div class="card-notes">${acc.notes ? '<i class="fa-solid fa-star"></i> ' + acc.notes : ''}</div>
+              <div class="price-box">
+                <span class="current-price">${finalPrice.toLocaleString('vi-VN')} đ</span>
+                ${finalOldPrice ? `<span class="old-price">${finalOldPrice.toLocaleString('vi-VN')} đ</span>` : ''}
+              </div>
+            </div>
+            ${isAvailable 
+              ? `<a href="${buyUrl}" target="_blank" class="buy-btn"><i class="fa-brands fa-whatsapp"></i> MUA NGAY (ZALO)</a>`
+              : `<a href="#" class="buy-btn disabled">ĐÃ BÁN</a>`
+            }
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function filterAccounts() { renderAccounts(); }
+
+    function setFilter(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.tag').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderAccounts();
+    }
+
+    // Khởi chạy lấy dữ liệu từ API
+    loadAccounts();
+  </script>
+</body>
+</html>
