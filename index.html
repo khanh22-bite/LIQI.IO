@@ -218,6 +218,7 @@
   <script>
     let rawAccounts = [];
     let currentPriceFilter = 'all';
+    let searchTimeout = null; // Dùng cho Debounce tìm kiếm
 
     const ctvName = (typeof CONFIG !== 'undefined' && CONFIG.CTV_NAME) ? CONFIG.CTV_NAME : "CỘNG TÁC VIÊN";
     const ctvPhone = (typeof CONFIG !== 'undefined' && CONFIG.CTV_PHONE) ? CONFIG.CTV_PHONE : "083xxxxxxx";
@@ -227,18 +228,15 @@
     document.getElementById('ctv-phone').innerText = ctvPhone;
     document.getElementById('shop-title').innerText = `KHO ACC GAME - ${ctvName.toUpperCase()}`;
 
-    // Hàm lấy khoản tiền cộng thêm tự động dựa theo config mốc giá
     function getMarkupPrice(basePrice) {
       if (typeof CONFIG !== 'undefined' && typeof CONFIG.getExtraPrice === 'function') {
         return CONFIG.getExtraPrice(basePrice);
       }
-      return 0; // Fallback an toàn
+      return 0;
     }
 
-    // Hàm chuẩn hóa mã hiển thị kèm tiền tố KK (Loại bỏ tiền tố cũ DTT nếu có sẵn trong API để tránh lặp)
     function formatDisplayCode(rawId) {
       let cleanId = String(rawId || '').trim();
-      // Nếu API trả về đã có dạng DTTxxx hoặc KKxxx, cắt bỏ phần chữ cái đầu lấy số
       cleanId = cleanId.replace(/^[a-zA-Z]+/g, '');
       return `${accountPrefix}${cleanId}`;
     }
@@ -249,18 +247,44 @@
       return `https://www.tienrv.com${url}`;
     }
 
+    // TỐI ƯU 3: Tải dữ liệu có tích hợp Cache (LocalStorage) 2 phút
     async function loadAccounts() {
+      const cacheKey = 'kk_accounts_cache';
+      const cacheTimeKey = 'kk_accounts_time';
+      const cachedData = localStorage.getItem(cacheKey);
+      const cachedTime = localStorage.getItem(cacheTimeKey);
+      const now = new Date().getTime();
+
+      // Nếu cache còn hạn dưới 2 phút thì dùng luôn cho mượt, không gọi lại API
+      if (cachedData && cachedTime && (now - cachedTime < 120000)) {
+        rawAccounts = JSON.parse(cachedData);
+        renderAccounts();
+        return;
+      }
+
       try {
         const response = await fetch(CONFIG.API_URL);
         const result = await response.json();
         rawAccounts = result.accounts || result.data || (Array.isArray(result) ? result : []);
+        
+        // Lưu vào LocalStorage
+        localStorage.setItem(cacheKey, JSON.stringify(rawAccounts));
+        localStorage.setItem(cacheTimeKey, now);
+
         renderAccounts();
       } catch (error) {
         console.error('Lỗi API:', error);
-        document.getElementById('account-list').innerHTML = '<div class="status-msg" style="color: #ff4757;">Không thể kết nối đến máy chủ kho game.</div>';
+        // Nếu lỗi mạng mà trước đó từng có cache thì dùng tạm cache cũ để chống sập web
+        if (cachedData) {
+          rawAccounts = JSON.parse(cachedData);
+          renderAccounts();
+        } else {
+          document.getElementById('account-list').innerHTML = '<div class="status-msg" style="color: #ff4757;">Không thể kết nối đến máy chủ kho game.</div>';
+        }
       }
     }
 
+    // TỐI ƯU 2: Debounce ô tìm kiếm (Chờ 300ms sau khi ngừng gõ mới thực hiện lọc)
     function onSearchInput() {
       const searchVal = document.getElementById('search-input').value.trim();
       if (searchVal.length > 0) {
@@ -271,7 +295,11 @@
 
         document.getElementById('available-checkbox').checked = false;
       }
-      renderAccounts();
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        renderAccounts();
+      }, 300);
     }
 
     function renderAccounts() {
