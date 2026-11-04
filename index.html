@@ -214,22 +214,48 @@
     <i class="fa-solid fa-arrow-up"></i>
   </button>
 
-  <script src="config.js"></script>
+  <!-- GỘP TRỰC TIẾP CONFIG VÀO ĐÂY (KHÔNG CẦN FILE CONFIG.JS NỮA) -->
+  <script>
+    const CONFIG = {
+      API_URL: "https://www.tienrv.com/api/vps/public/accounts",
+      CTV_NAME: "Khánh LIQI",
+      CTV_PHONE: "0329675037",
+      ZALO_LINK: "https://zalo.me/0329675037",
+      ACCOUNT_PREFIX: "KK",
+      
+      getExtraPrice: function(basePrice) {
+        if (basePrice < 1000000) {
+          return 50000;
+        } else if (basePrice < 2000000) {
+          return 100000;
+        } else if (basePrice < 3000000) {
+          return 200000;
+        } else if (basePrice <= 5000000) {
+          return 250000;
+        } else if (basePrice <= 10000000) {
+          return 350000;
+        } else {
+          return 500000;
+        }
+      }
+    };
+  </script>
+
   <script>
     let rawAccounts = [];
     let currentPriceFilter = 'all';
-    let searchTimeout = null; // Dùng cho Debounce tìm kiếm
+    let searchTimeout = null;
 
-    const ctvName = (typeof CONFIG !== 'undefined' && CONFIG.CTV_NAME) ? CONFIG.CTV_NAME : "CỘNG TÁC VIÊN";
-    const ctvPhone = (typeof CONFIG !== 'undefined' && CONFIG.CTV_PHONE) ? CONFIG.CTV_PHONE : "083xxxxxxx";
-    const zaloLink = (typeof CONFIG !== 'undefined' && CONFIG.ZALO_LINK) ? CONFIG.ZALO_LINK : "https://zalo.me/";
-    const accountPrefix = (typeof CONFIG !== 'undefined' && CONFIG.ACCOUNT_PREFIX) ? CONFIG.ACCOUNT_PREFIX : "KK";
+    const ctvName = CONFIG.CTV_NAME;
+    const ctvPhone = CONFIG.CTV_PHONE;
+    const zaloLink = CONFIG.ZALO_LINK;
+    const accountPrefix = CONFIG.ACCOUNT_PREFIX;
 
     document.getElementById('ctv-phone').innerText = ctvPhone;
     document.getElementById('shop-title').innerText = `KHO ACC GAME - ${ctvName.toUpperCase()}`;
 
     function getMarkupPrice(basePrice) {
-      if (typeof CONFIG !== 'undefined' && typeof CONFIG.getExtraPrice === 'function') {
+      if (typeof CONFIG.getExtraPrice === 'function') {
         return CONFIG.getExtraPrice(basePrice);
       }
       return 0;
@@ -247,7 +273,6 @@
       return `https://www.tienrv.com${url}`;
     }
 
-    // TỐI ƯU 3: Tải dữ liệu có tích hợp Cache (LocalStorage) 2 phút
     async function loadAccounts() {
       const cacheKey = 'kk_accounts_cache';
       const cacheTimeKey = 'kk_accounts_time';
@@ -255,7 +280,6 @@
       const cachedTime = localStorage.getItem(cacheTimeKey);
       const now = new Date().getTime();
 
-      // Nếu cache còn hạn dưới 2 phút thì dùng luôn cho mượt, không gọi lại API
       if (cachedData && cachedTime && (now - cachedTime < 120000)) {
         rawAccounts = JSON.parse(cachedData);
         renderAccounts();
@@ -267,14 +291,12 @@
         const result = await response.json();
         rawAccounts = result.accounts || result.data || (Array.isArray(result) ? result : []);
         
-        // Lưu vào LocalStorage
         localStorage.setItem(cacheKey, JSON.stringify(rawAccounts));
         localStorage.setItem(cacheTimeKey, now);
 
         renderAccounts();
       } catch (error) {
         console.error('Lỗi API:', error);
-        // Nếu lỗi mạng mà trước đó từng có cache thì dùng tạm cache cũ để chống sập web
         if (cachedData) {
           rawAccounts = JSON.parse(cachedData);
           renderAccounts();
@@ -284,7 +306,6 @@
       }
     }
 
-    // TỐI ƯU 2: Debounce ô tìm kiếm (Chờ 300ms sau khi ngừng gõ mới thực hiện lọc)
     function onSearchInput() {
       const searchVal = document.getElementById('search-input').value.trim();
       if (searchVal.length > 0) {
@@ -341,7 +362,6 @@
         return matchSearch && matchPrice && matchAvailable;
       });
 
-      // Sắp xếp: Còn hàng lên trên, Đã bán xuống cuối cùng
       filtered.sort((a, b) => {
         const isAAvailable = a.status === 'Còn hàng' ? 1 : 0;
         const isBAvailable = b.status === 'Còn hàng' ? 1 : 0;
@@ -410,6 +430,12 @@
 
     function setPriceFilter(type, btn) {
       currentPriceFilter = type;
+      
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.value = '';
+      }
+
       document.querySelectorAll('.tag').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderAccounts();
