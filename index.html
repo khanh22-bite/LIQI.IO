@@ -170,7 +170,7 @@
       <div class="toolbar-top">
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="search-input" placeholder="Tìm theo mã acc (ví dụ: KK507)..." oninput="onSearchInput()">
+          <input type="text" id="search-input" placeholder="Tìm theo mã acc (ví dụ: KK507, REG21)..." oninput="onSearchInput()">
         </div>
         <div class="sort-box">
           <select id="sort-select" onchange="filterAccounts()">
@@ -214,7 +214,7 @@
     <i class="fa-solid fa-arrow-up"></i>
   </button>
 
-  <!-- GỘP TRỰC TIẾP CONFIG VÀO ĐÂY (KHÔNG CẦN FILE CONFIG.JS NỮA) -->
+  <!-- CẤU HÌNH & DỮ LIỆU TĨNH GỘP CHUNG -->
   <script>
     const CONFIG = {
       API_URL: "https://www.tienrv.com/api/vps/public/accounts",
@@ -239,8 +239,32 @@
         }
       }
     };
+
+    // Dữ liệu tĩnh các acc thủ công (REG21 - REG39)
+    const staticAccounts = [
+      { id: "REG21", title: "REG21", price: 150000, status: "Còn hàng", image: "https://i.postimg.cc/g0BtCZyY/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG22", title: "REG22", price: 140000, status: "Còn hàng", image: "https://i.postimg.cc/CLHPFtCv/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG23", title: "REG23", price: 80000, status: "Còn hàng", image: "https://i.postimg.cc/2SkH3w2r/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG24", title: "REG24", price: 90000, status: "Còn hàng", image: "https://i.postimg.cc/fR88d9rg/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG25", title: "REG25", price: 80000, status: "Còn hàng", image: "https://i.postimg.cc/yNWvy8M2/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG26", title: "REG26", price: 100000, status: "Còn hàng", image: "https://i.postimg.cc/QMPS4rss/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG27", title: "REG27", price: 130000, status: "Còn hàng", image: "https://i.postimg.cc/9M7bsNFP/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG28", title: "REG28", price: 100000, status: "Còn hàng", image: "https://i.postimg.cc/W3k8xfbC/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG29", title: "REG29", price: 222000, status: "Còn hàng", image: "https://i.postimg.cc/FzXpvgY5/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG30", title: "REG30", price: 222000, status: "Còn hàng", image: "https://i.postimg.cc/gjyD2Xhn/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG31", title: "REG31", price: 155000, status: "Còn hàng", image: "https://i.postimg.cc/cC7mLg39/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG32", title: "REG32", price: 155000, status: "Còn hàng", image: "https://i.postimg.cc/Y2Q83VPq/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG33", title: "REG33", price: 155000, status: "Còn hàng", image: "https://i.postimg.cc/2jnTwJth/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG34", title: "REG34", price: 160000, status: "Còn hàng", image: "https://i.postimg.cc/PrhyFyGD/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG35", title: "REG35", price: 230000, status: "Còn hàng", image: "https://i.postimg.cc/dtv6S6Mf/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG36", title: "REG36", price: 222000, status: "Còn hàng", image: "https://i.postimg.cc/15HBxFPT/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG37", title: "REG37", price: 222000, status: "Còn hàng", image: "https://i.postimg.cc/FsZptSN4/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG38", title: "REG38", price: 400000, status: "Còn hàng", image: "https://i.postimg.cc/sggc32gg/image.png", notes: "reg bao về gắn số đổi mk" },
+      { id: "REG39", title: "REG39", price: 300000, status: "Còn hàng", image: "https://i.postimg.cc/pLLZPdLj/image.png", notes: "reg bao về gắn số đổi mk" }
+    ];
   </script>
 
+  <!-- LOGIC XỬ LÝ CHÍNH -->
   <script>
     let rawAccounts = [];
     let currentPriceFilter = 'all';
@@ -254,7 +278,8 @@
     document.getElementById('ctv-phone').innerText = ctvPhone;
     document.getElementById('shop-title').innerText = `KHO ACC GAME - ${ctvName.toUpperCase()}`;
 
-    function getMarkupPrice(basePrice) {
+    function getMarkupPrice(basePrice, isStatic = false) {
+      if (isStatic) return 0; // Acc REG tĩnh không cộng thêm phí
       if (typeof CONFIG.getExtraPrice === 'function') {
         return CONFIG.getExtraPrice(basePrice);
       }
@@ -263,6 +288,9 @@
 
     function formatDisplayCode(rawId) {
       let cleanId = String(rawId || '').trim();
+      if (cleanId.toUpperCase().startsWith('REG')) {
+        return cleanId.toUpperCase();
+      }
       cleanId = cleanId.replace(/^[a-zA-Z]+/g, '');
       return `${accountPrefix}${cleanId}`;
     }
@@ -274,36 +302,37 @@
     }
 
     async function loadAccounts() {
-      const cacheKey = 'kk_accounts_cache';
-      const cacheTimeKey = 'kk_accounts_time';
+      const cacheKey = 'kk_accounts_cache_v7';
+      const cacheTimeKey = 'kk_accounts_time_v7';
       const cachedData = localStorage.getItem(cacheKey);
       const cachedTime = localStorage.getItem(cacheTimeKey);
       const now = new Date().getTime();
 
+      let apiAccounts = [];
+
       if (cachedData && cachedTime && (now - cachedTime < 120000)) {
-        rawAccounts = JSON.parse(cachedData);
-        renderAccounts();
-        return;
-      }
-
-      try {
-        const response = await fetch(CONFIG.API_URL);
-        const result = await response.json();
-        rawAccounts = result.accounts || result.data || (Array.isArray(result) ? result : []);
-        
-        localStorage.setItem(cacheKey, JSON.stringify(rawAccounts));
-        localStorage.setItem(cacheTimeKey, now);
-
-        renderAccounts();
-      } catch (error) {
-        console.error('Lỗi API:', error);
-        if (cachedData) {
-          rawAccounts = JSON.parse(cachedData);
-          renderAccounts();
-        } else {
-          document.getElementById('account-list').innerHTML = '<div class="status-msg" style="color: #ff4757;">Không thể kết nối đến máy chủ kho game.</div>';
+        apiAccounts = JSON.parse(cachedData);
+      } else {
+        try {
+          const response = await fetch(CONFIG.API_URL);
+          const result = await response.json();
+          apiAccounts = result.accounts || result.data || (Array.isArray(result) ? result : []);
+          
+          localStorage.setItem(cacheKey, JSON.stringify(apiAccounts));
+          localStorage.setItem(cacheTimeKey, now);
+        } catch (error) {
+          console.error('Lỗi API:', error);
+          if (cachedData) {
+            apiAccounts = JSON.parse(cachedData);
+          }
         }
       }
+
+      const markedStatic = (typeof staticAccounts !== 'undefined' ? staticAccounts : []).map(acc => ({ ...acc, _isStatic: true }));
+      const markedApi = apiAccounts.map(acc => ({ ...acc, _isStatic: false }));
+
+      rawAccounts = [...markedStatic, ...markedApi];
+      renderAccounts();
     }
 
     function onSearchInput() {
@@ -332,7 +361,7 @@
 
       const filtered = rawAccounts.filter(acc => {
         const basePrice = acc.price || 0;
-        const extraPrice = getMarkupPrice(basePrice);
+        const extraPrice = getMarkupPrice(basePrice, acc._isStatic);
         const adjustedPrice = basePrice + extraPrice;
 
         const displayCode = formatDisplayCode(acc.title || acc.id).toLowerCase();
@@ -370,8 +399,8 @@
           return isBAvailable - isAAvailable;
         }
 
-        const priceA = (a.price || 0) + getMarkupPrice(a.price || 0);
-        const priceB = (b.price || 0) + getMarkupPrice(b.price || 0);
+        const priceA = (a.price || 0) + getMarkupPrice(a.price || 0, a._isStatic);
+        const priceB = (b.price || 0) + getMarkupPrice(b.price || 0, b._isStatic);
         
         if (sortOrder === 'asc') {
           return priceA - priceB;
@@ -390,7 +419,7 @@
         const displayCode = formatDisplayCode(acc.title || acc.id);
         
         const basePrice = acc.price || 0;
-        const extraPrice = getMarkupPrice(basePrice);
+        const extraPrice = getMarkupPrice(basePrice, acc._isStatic);
         const finalPrice = basePrice + extraPrice;
         
         const finalOldPrice = acc.oldPrice !== undefined ? acc.oldPrice : acc.old_price;
